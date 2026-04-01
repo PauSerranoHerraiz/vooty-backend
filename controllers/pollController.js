@@ -1,4 +1,3 @@
-Reemplaza getPolls por esto:
 
 const Poll = require("../models/Poll");
 
