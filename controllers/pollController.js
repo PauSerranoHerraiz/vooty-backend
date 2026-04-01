@@ -1,11 +1,39 @@
+Reemplaza getPolls por esto:
+
 const Poll = require("../models/Poll");
 
 exports.getPolls = async (req, res) => {
   try {
     const polls = await Poll.find().sort({ createdAt: -1 });
-    res.json(polls);
+
+    const pollsWithStats = polls.map(poll => {
+      const totalVotes = poll.options.reduce(
+        (sum, option) => sum + option.votes,
+        0
+      );
+
+      const optionsWithPercentage = poll.options.map(option => ({
+        text: option.text,
+        votes: option.votes,
+        percentage:
+          totalVotes === 0
+            ? 0
+            : Math.round((option.votes / totalVotes) * 100)
+      }));
+
+      return {
+        _id: poll._id,
+        question: poll.question,
+        options: optionsWithPercentage,
+        totalVotes,
+        createdAt: poll.createdAt
+      };
+    });
+
+    res.json(pollsWithStats);
+
   } catch (error) {
-    res.status(500).json({ message: "Error fetching polls" });
+    res.status(500).json({ error: error.message });
   }
 };
 
